@@ -1,0 +1,7 @@
+.wrangler/
+dist/
+.qa/
+node_modules/
+.dev.vars
+*.sqlite
+*.sqlite-*

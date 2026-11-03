@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "dev": "wrangler dev --config backend/wrangler.toml",
+    "build": "node build.mjs",
+    "test:browser": "node tools/browser-check.mjs"
+  }
+}
