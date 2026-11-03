@@ -1,0 +1,14 @@
+name = "camino-a-mi-casa-api"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "camino-a-mi-casa"
+database_id = "REEMPLAZAR_CON_ID_REAL"
+
+# Secrets (NO escribir valores en este archivo):
+# ADMIN_EMAIL: correo exacto del propietario autorizado
+# CF_ACCESS_TEAM_DOMAIN: ej. equipo.cloudflareaccess.com
+# CF_ACCESS_AUD: application audience tag de Cloudflare Access
+# FRONTEND_ORIGIN: origen HTTPS exacto del sitio público
