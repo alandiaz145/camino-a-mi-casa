@@ -16,7 +16,7 @@ async function verifyAccess(request,env){
   if(header.alg!=='RS256'||!str(header.kid,200))throw Error('Unsupported token');
   if(payload.iss!=='https://'+domain||payload.aud!==env.CF_ACCESS_AUD&&!(Array.isArray(payload.aud)&&payload.aud.includes(env.CF_ACCESS_AUD)))throw Error('Invalid issuer/audience');
   const now=Math.floor(Date.now()/1000);
-  if(!integer(payload.exp,now+1)||!integer(payload.nbf,0,now+60))throw Error('Expired token');
+  if(!integer(payload.exp,now+1)||(payload.nbf!==undefined&&!integer(payload.nbf,0,now+60)))throw Error('Expired token');
   if((payload.email||'').toLowerCase()!==env.ADMIN_EMAIL.toLowerCase())throw Error('Unauthorized user');
   const response=await fetch('https://'+domain+'/cdn-cgi/access/certs');
   if(!response.ok)throw Error('Unable to fetch signing keys');
@@ -32,10 +32,11 @@ async function state(db,admin=false){
     db.prepare('SELECT key,value FROM settings'),
     db.prepare(admin?'SELECT id,name,price,cost,visible,sort_order FROM products ORDER BY sort_order,id':'SELECT id,name,price FROM products WHERE visible=1 ORDER BY sort_order,id'),
     db.prepare(admin?'SELECT id,kind,amount,concept,created_at FROM movements ORDER BY created_at DESC,id DESC LIMIT 500':'SELECT COALESCE(SUM(CASE WHEN kind=\'in\' THEN amount ELSE -amount END),0) AS balance FROM movements'),
-    db.prepare(admin?'SELECT * FROM missions ORDER BY created_at DESC LIMIT 500':'SELECT id,title,description,category,status,due_date FROM missions WHERE public=1 ORDER BY created_at DESC LIMIT 100')
+    db.prepare(admin?'SELECT * FROM missions ORDER BY created_at DESC LIMIT 500':'SELECT id,title,description,category,status,due_date FROM missions WHERE public=1 ORDER BY created_at DESC LIMIT 100'),
+    db.prepare("SELECT COALESCE(SUM(CASE WHEN kind='in' THEN amount ELSE -amount END),0) AS balance FROM movements")
   ]);
   const settings=Object.fromEntries(rows[0].results.map(x=>[x.key,Number(x.value)]));
-  const balance=admin?rows[2].results.reduce((a,m)=>a+(m.kind==='in'?m.amount:-m.amount),0):rows[2].results[0].balance;
+  const balance=rows[4].results[0].balance;
   return {goal:settings.goal,months:settings.months,balance,products:rows[1].results,missions:rows[3].results,...(admin?{movements:rows[2].results}:{})};
 }
 async function parse(req){if(+(req.headers.get('content-length')||0)>16384)throw Error('Body too large');const t=await req.text();if(t.length>16384)throw Error('Body too large');return JSON.parse(t)}
